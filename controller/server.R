@@ -44,13 +44,17 @@ server <- function(input, output, session) {
         )
         
         # Mark the feature with the minimum TISSUE_PVAL for highlighting
-        drug_data <- drug_data %>% 
-          mutate(highlight = TISSUE_PVAL == min(TISSUE_PVAL))
+        
         
         print(drug_data)
         # Calculate the signed IC50 effect size (assuming FEATURE_DELTA_MEAN_IC50 is non-zero)
         drug_data <- drug_data %>% 
           mutate(SIGNED_IC50_EFFECT_SIZE = IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)))
+        
+        
+        drug_data <- drug_data %>% 
+          mutate(highlight = TISSUE_PVAL == min(TISSUE_PVAL))
+        
         
         if (nrow(drug_data)>0){
           
