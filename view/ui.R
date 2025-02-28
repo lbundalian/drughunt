@@ -41,14 +41,14 @@ ui <- grid_page(
         options = list(placeholder = "Search or select a target"),
         width = "100%"
       ),
-      selectizeInput(
-        inputId = "selected_feature",
-        label = "Select Cancer Feature",
-        choices = NULL,  # Update dynamically as needed
-        multiple = TRUE,
-        options = list(placeholder = "Search or select a feature"),
-        width = "100%"
-      ),
+      # selectizeInput(
+      #   inputId = "selected_feature",
+      #   label = "Select Cancer Feature",
+      #   choices = NULL,  # Update dynamically as needed
+      #   multiple = TRUE,
+      #   options = list(placeholder = "Search or select a feature"),
+      #   width = "100%"
+      # ),
       actionButton(
         inputId = "plot_button",
         label = "Plot",

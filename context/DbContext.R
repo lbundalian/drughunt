@@ -68,10 +68,9 @@ DbContext <- R6Class("DbContext",
                          query <- "SELECT DISTINCT \"DRUG_TARGET\" FROM ANOVA_DATA"
                          result <- dbGetQuery(self$conn, query)$DRUG_TARGET
                          # Split comma-separated entries and flatten the list into a single vector
-                         result <- unlist(strsplit(result, ","))
-                         
+                         # result <- unlist(strsplit(result, ","))
                          # Trim any leading/trailing whitespace from each element
-                         result <- trimws(result)
+                         # result <- trimws(result)
                          self$disconnect_db()
                          return(result)
                        },
@@ -89,10 +88,19 @@ DbContext <- R6Class("DbContext",
                        
                        get_drug_data = function(drug) {
                          self$connect_db()
-                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE \"DRUG_NAME\" = '%s'", drug)
+                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"DRUG_NAME\" = '%s'", drug)
+                         result <- dbGetQuery(self$conn, query)
+                         self$disconnect_db()
+                         return(result)
+                       },
+                       
+                       get_target_data = function(target) {
+                         self$connect_db()
+                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"DRUG_TARGET\" = '%s'", target)
                          result <- dbGetQuery(self$conn, query)
                          self$disconnect_db()
                          return(result)
                        }
+                       
                      )
 )
