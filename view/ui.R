@@ -90,61 +90,11 @@ ui <- fluidPage(
         ),
         
         # Second tab: Data Summary (Placeholder)
-        tabPanel("Drug and Target Overview",
-                 grid_page(
-                   layout = c(
-                     "header  header  ",
-                     "sidebar plot "
-                   ),
-                   row_sizes = c("100px", "1fr"),
-                   col_sizes = c("500px", "1fr"),
-                   gap_size = "1rem",
-                   
-                   # Header
-                   grid_card_text(
-                     area = "header",
-                     content = "Drug and Target Overview",
-                     alignment = "start",
-                     is_title = TRUE
-                   ),
-                   
-                   # Sidebar for Drug Selection
-                   grid_card(
-                     area = "Drug and Target Overview",
-                     card_header("Settings"),
-                     card_body(
-                       selectizeInput(
-                         inputId = "selected_drug2",
-                         label = "Select Drug",
-                         choices = NULL,
-                         multiple = TRUE,
-                         options = list(placeholder = "Search or select a drug...", maxItems = 5),
-                         width = "100%"
-                       ),
-                       selectizeInput(
-                         inputId = "selected_target2",
-                         label = "Select Target",
-                         choices = NULL,
-                         multiple = TRUE,
-                         options = list(placeholder = "Search or select a target"),
-                         width = "100%"
-                       ),
-                       actionButton(
-                         inputId = "plot_button2",
-                         label = "Plot",
-                         width = "100%"
-                       )
-                     )
-                   ),
-                   
-                   # Plot Output: dynamically generated tabs
-                   grid_card(
-                     area = "plot",
-                     card_header("Volcano Plot"),
-                     card_body(
-                       uiOutput("plot_tabs")
-                     )
-                   )
+        # Third tab: Settings (Placeholder)
+        tabPanel("Settings",
+                 fluidPage(
+                   h3("User Settings"),
+                   p("This section will allow users to configure preferences for the dashboard.")
                  )
         ),
         
