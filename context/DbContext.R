@@ -100,6 +100,14 @@ DbContext <- R6Class("DbContext",
                          result <- dbGetQuery(self$conn, query)
                          self$disconnect_db()
                          return(result)
+                       },
+                       
+                       get_feature_data = function(feature) {
+                         self$connect_db()
+                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"FEATURE_NAME\" = '%s'", feature)
+                         result <- dbGetQuery(self$conn, query)
+                         self$disconnect_db()
+                         return(result)
                        }
                        
                      )
