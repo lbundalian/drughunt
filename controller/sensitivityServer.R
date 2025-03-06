@@ -9,10 +9,11 @@ library(tidyverse)
 # Sensitivity Module Server
 sensitivityServer <- function(id, dbcontext) {
   moduleServer(id, function(input, output, session) {
+
     # Update dropdowns from database context
     observe({
       updateSelectizeInput(session, "selected_drug", choices = dbcontext$get_drug_list(), server = TRUE)
-      updateSelectizeInput(session, "selected_target", choices = dbcontext$get_target_list(), server = TRUE)
+      updateSelectizeInput(session, "selected_target", choices = dbcontext$get_target_list()  , server = TRUE)
       updateSelectizeInput(session, "selected_feature", choices = dbcontext$get_feature_list(), server = TRUE)
     })
     
@@ -25,7 +26,7 @@ sensitivityServer <- function(id, dbcontext) {
       
       p <- ggplot(data, 
                   aes(x = SIGNED_IC50_EFFECT_SIZE, 
-                      y = -log10(TISSUE_PVAL),
+                      y = -log10(TISSUE_PVAL + 2e-16),
                       size = as.integer(N_FEATURE_POS) * 5,
                       color = color_group,
                       text = paste0(

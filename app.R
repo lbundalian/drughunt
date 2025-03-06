@@ -44,7 +44,7 @@ ui <- fluidPage(
         tabPanel("Matching", matchingUI("matching"))
       )
   )
-)
+) 
 
 server <- function(input, output, session) {
   
@@ -53,7 +53,7 @@ server <- function(input, output, session) {
   # Call the modules’ server functions
   sensitivityServer("sensitivity", dbcontext)
   overviewServer("overview", dbcontext)
-  matchingServer("matching")
+  matchingServer("matching",dbcontext)
 }
 
 shinyApp(ui, server)

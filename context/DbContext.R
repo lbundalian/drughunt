@@ -15,6 +15,7 @@ DbContext <- R6Class("DbContext",
                          } else {
                            message("Database already exists. Skipping initialization.")
                          }
+                         
                        },
                        
                        build_db = function() {
@@ -42,7 +43,7 @@ DbContext <- R6Class("DbContext",
                        },
                        
                        connect_db = function() {
-                         self$conn <- dbConnect(RSQLite::SQLite(), self$db_path)
+                         self$conn <- DBI::dbConnect(RSQLite::SQLite(), self$db_path)
                          message("✅ Database connection established.")
                        },
                        
@@ -68,9 +69,10 @@ DbContext <- R6Class("DbContext",
                          query <- "SELECT DISTINCT \"DRUG_TARGET\" FROM ANOVA_DATA"
                          result <- dbGetQuery(self$conn, query)$DRUG_TARGET
                          # Split comma-separated entries and flatten the list into a single vector
-                         # result <- unlist(strsplit(result, ","))
+                         result <- unlist(strsplit(result, ","))
+
                          # Trim any leading/trailing whitespace from each element
-                         # result <- trimws(result)
+                         result <- trimws(result)
                          self$disconnect_db()
                          return(result)
                        },
@@ -96,7 +98,10 @@ DbContext <- R6Class("DbContext",
                        
                        get_target_data = function(target) {
                          self$connect_db()
-                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"DRUG_TARGET\" = '%s'", target)
+                         # query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"DRUG_TARGET\" = '%s'", target)
+                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"DRUG_TARGET\" LIKE '%%%s%%'", target)
+                         # query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL) AND \"DRUG_TARGET\" ~* E'\\\\m%s\\\\M'", target)
+                         
                          result <- dbGetQuery(self$conn, query)
                          self$disconnect_db()
                          return(result)
@@ -108,7 +113,54 @@ DbContext <- R6Class("DbContext",
                          result <- dbGetQuery(self$conn, query)
                          self$disconnect_db()
                          return(result)
+                       },
+                       
+                       find_best_drug = function(feature,penalty = 1) {
+                         self$connect_db()
+                         ### querying the feature
+                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL)")
+                         
+                         result <- dbGetQuery(self$conn, query)
+                         data_filtered <- result %>%
+                           filter((!grepl("PANCAN", FEATURE_NAME)) | (!is.na(DRUG_TARGET)))
+                         
+                         # Define a pattern that matches the feature as a whole word.
+                         # (^|[^[:alnum:]]) ensures the feature is either at the beginning
+                         # or preceded by a non-alphanumeric character,
+                         # and ([^[:alnum:]]|$) ensures it is followed by a non-alphanumeric character or is at the end.
+                         pattern <- paste0("(^|[^[:alnum:]])", feature, "([^[:alnum:]]|$)")
+                         
+                         # Filter data for rows where FEATURE_NAME or DRUG_TARGET matches the pattern.
+                         data_filtered <- data_filtered %>%
+                           filter(grepl(pattern, FEATURE_NAME, perl = TRUE) | grepl(pattern, DRUG_TARGET, perl = TRUE))
+                         
+                         # Compute the signed effect size.
+                         # (Using an ifelse to avoid division by zero if FEATURE_DELTA_MEAN_IC50 happens to be zero.)
+                         data_filtered <- data_filtered %>%
+                           mutate(SIGNED_EFFECT_SIZE = ifelse(FEATURE_DELTA_MEAN_IC50 != 0,
+                                                              IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)),
+                                                              0))                         
+                         # 
+                         # result <- result %>% mutate(
+                         #   SIGNED_EFFECT_SIZE = IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)))
+                         
+                         ### querying the global resistance
+                         query_resistance <- "SELECT DRUG_NAME, 
+                              MAX(IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / ABS(FEATURE_DELTA_MEAN_IC50))) AS GLOBAL_RESISTANCE 
+                               FROM ANOVA_DATA 
+                               GROUP BY DRUG_NAME"
+                         resistance <- dbGetQuery(self$conn, query_resistance)
+                         
+                         # Merge the global resistance into the result data based on DRUG_NAME.
+                         result <- merge(data_filtered, resistance, by = "DRUG_NAME", all.x = TRUE)
+                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(TISSUE_PVAL+2e-16))
+                         result <- result %>% arrange(desc(COMPOSITE_SCORE)) %>% head(15)
+                         
+                         self$disconnect_db()
+                         return(result)
+                         
                        }
+                       
                        
                      )
 )
