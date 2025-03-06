@@ -26,14 +26,31 @@ matchingUI <- function(id) {
       area = "sidebar",
       card_header("Settings"),
       card_body(
+        # selectizeInput(
+        #   inputId = ns("selected_target_feature"),
+        #   label = "Select Target or Feature",
+        #   choices = NULL,
+        #   multiple = TRUE,
+        #   options = list(placeholder = "Search or select a target or feature"),
+        #   width = "100%"
+        # ),
         selectizeInput(
-          inputId = ns("selected_target_feature"),
-          label = "Select Target or Feature",
+          inputId = ns("selected_target"),
+          label = "Select Target",
           choices = NULL,
           multiple = TRUE,
-          options = list(placeholder = "Search or select a target or feature"),
+          options = list(placeholder = "Search or select a target"),
           width = "100%"
         ),
+        selectizeInput(
+          inputId = ns("selected_feature"),
+          label = "Select Cancer Feature",
+          choices = NULL,
+          multiple = TRUE,
+          options = list(placeholder = "Search or select a feature"),
+          width = "100%"
+        ),
+        
         actionButton(
           inputId = ns("plot_button"),
           label = "Plot",

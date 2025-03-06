@@ -115,7 +115,7 @@ DbContext <- R6Class("DbContext",
                          return(result)
                        },
                        
-                       find_best_drug = function(feature,penalty = 1) {
+                       find_best_drug = function(feature, target,penalty = 1) {
                          self$connect_db()
                          ### querying the feature
                          query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL)")
@@ -131,8 +131,18 @@ DbContext <- R6Class("DbContext",
                          pattern <- paste0("(^|[^[:alnum:]])", feature, "([^[:alnum:]]|$)")
                          
                          # Filter data for rows where FEATURE_NAME or DRUG_TARGET matches the pattern.
-                         data_filtered <- data_filtered %>%
-                           filter(grepl(pattern, FEATURE_NAME, perl = TRUE) | grepl(pattern, DRUG_TARGET, perl = TRUE))
+                         
+                         # data_filtered <- data_filtered %>%
+                         #   filter(grepl(pattern, FEATURE_NAME, perl = TRUE) | grepl(pattern, DRUG_TARGET, perl = TRUE))
+                                                  
+                         if(length(feature) > 0){
+                           data_filtered <- data_filtered %>%
+                             filter(grepl(pattern, FEATURE_NAME, perl = TRUE))  
+                         } else if (length(target) > 0){
+                           data_filtered <- data_filtered %>%
+                             filter(grepl(pattern, DRUG_TARGET, perl = TRUE))
+                         } 
+                         
                          
                          # Compute the signed effect size.
                          # (Using an ifelse to avoid division by zero if FEATURE_DELTA_MEAN_IC50 happens to be zero.)
@@ -153,7 +163,7 @@ DbContext <- R6Class("DbContext",
                          
                          # Merge the global resistance into the result data based on DRUG_NAME.
                          result <- merge(data_filtered, resistance, by = "DRUG_NAME", all.x = TRUE)
-                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(TISSUE_PVAL+2e-16))
+                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(TISSUE_PVAL))
                          result <- result %>% arrange(desc(COMPOSITE_SCORE)) %>% head(15)
                          
                          self$disconnect_db()
