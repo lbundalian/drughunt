@@ -18,16 +18,33 @@ matchingServer <- function(id, dbcontext) {
     generate_flip_chart <- function(data, title) {
 
       
-      data <-  data %>% mutate(DRUG_NAME = reorder(DRUG_NAME, COMPOSITE_SCORE))
+      
       
       # Create a horizontal bar chart: x axis = composite score, y axis = drug name.
-      p <- ggplot(data, aes(x = DRUG_NAME, y = COMPOSITE_SCORE)) +
-        geom_col(fill = "indianred") +
+      # Create a new ordering variable independent of Drug Name
+      data$ORDERED_FACTOR <- factor(seq_len(nrow(data)), levels = order(data$COMPOSITE_SCORE, decreasing = TRUE))
+      
+      p <- ggplot(data, aes(
+        x = reorder(ORDERED_FACTOR,COMPOSITE_SCORE),  # Independent ordering
+        y = COMPOSITE_SCORE,
+        group = interaction(DRUG_NAME, FEATURE_NAME),
+        text = paste0(
+          "Drug Name: ", DRUG_NAME, "\n",
+          "Feature or Target: ", ifelse(grepl("PANCAN", FEATURE_NAME), DRUG_TARGET, FEATURE_NAME), "\n",
+          "Pathway: ", TARGET_PATHWAY, "\n",
+          "IC50 Effect Size: ", round(IC50_EFFECT_SIZE, 2), "\n",
+          "P-Value: ", round(TISSUE_PVAL, 4), "\n",
+          "Sample Size: ", N_FEATURE_POS
+        )
+      )) +
+        geom_col(fill = "indianred", position = position_dodge(width = 0.9)) +
         coord_flip() +
-        labs(x = "Drug Name", y = "Composite Score", title = title) +
+        scale_x_discrete(labels = data$DRUG_NAME) +  # Keep Drug Names in labels
+        labs(x = "", y = "Composite Score", title = title) +
         theme_minimal() +
         theme(
           axis.title = element_text(size = 14, face = "bold"),
+          axis.text.x = element_text(size = 0),
           plot.title = element_text(hjust = 0.5, size = 16, face = "bold")
         )
       
@@ -39,6 +56,7 @@ matchingServer <- function(id, dbcontext) {
       
       if (length(input$selected_target) > 0) {
         selected_items <- input$selected_target
+        print(selected_items)
         data <- dbcontext$find_best_drug(target = selected_items)
         title_prefix <- "Plot for"
       } else if (length(input$selected_feature) > 0) {

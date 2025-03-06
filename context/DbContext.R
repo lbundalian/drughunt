@@ -115,7 +115,7 @@ DbContext <- R6Class("DbContext",
                          return(result)
                        },
                        
-                       find_best_drug = function(feature, target,penalty = 1) {
+                       find_best_drug = function(feature= NULL, target=NULL,penalty = 1) {
                          self$connect_db()
                          ### querying the feature
                          query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL)")
@@ -128,7 +128,7 @@ DbContext <- R6Class("DbContext",
                          # (^|[^[:alnum:]]) ensures the feature is either at the beginning
                          # or preceded by a non-alphanumeric character,
                          # and ([^[:alnum:]]|$) ensures it is followed by a non-alphanumeric character or is at the end.
-                         pattern <- paste0("(^|[^[:alnum:]])", feature, "([^[:alnum:]]|$)")
+                         
                          
                          # Filter data for rows where FEATURE_NAME or DRUG_TARGET matches the pattern.
                          
@@ -136,9 +136,13 @@ DbContext <- R6Class("DbContext",
                          #   filter(grepl(pattern, FEATURE_NAME, perl = TRUE) | grepl(pattern, DRUG_TARGET, perl = TRUE))
                                                   
                          if(length(feature) > 0){
+                           pattern <- paste0("(^|[^[:alnum:]])", feature, "([^[:alnum:]]|$)")
                            data_filtered <- data_filtered %>%
                              filter(grepl(pattern, FEATURE_NAME, perl = TRUE))  
                          } else if (length(target) > 0){
+                           pattern <- paste0("(^|[^[:alnum:]])", target, "([^[:alnum:]]|$)")
+                           print(pattern)
+                           print(data_filtered)
                            data_filtered <- data_filtered %>%
                              filter(grepl(pattern, DRUG_TARGET, perl = TRUE))
                          } 
@@ -163,8 +167,9 @@ DbContext <- R6Class("DbContext",
                          
                          # Merge the global resistance into the result data based on DRUG_NAME.
                          result <- merge(data_filtered, resistance, by = "DRUG_NAME", all.x = TRUE)
-                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(TISSUE_PVAL))
+                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(TISSUE_PVAL+1e-6))
                          result <- result %>% arrange(desc(COMPOSITE_SCORE)) %>% head(15)
+                         
                          
                          self$disconnect_db()
                          return(result)
