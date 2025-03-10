@@ -1,0 +1,12 @@
+name: drughunt
+title: drughunt
+username: lbundalian
+account: lbundalian
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14185308
+bundleId: 9918412
+url: https://lbundalian.shinyapps.io/drughunt/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

@@ -29,10 +29,11 @@ overviewServer <- function(id, dbcontext) {
       } else {
         data <- data %>% mutate(color_group = "snow2")
       }
+      print(data)
       
       p <- ggplot(data, 
                   aes(x = SIGNED_IC50_EFFECT_SIZE, 
-                      y = -log10(TISSUE_PVAL),
+                      y = -log10(FEATURE_PVAL+1e-6),
                       size = as.integer(N_FEATURE_POS) * 5,
                       color = color_group,
                       text = paste0(
@@ -40,7 +41,7 @@ overviewServer <- function(id, dbcontext) {
                         "Feature or Target: ", target_match, "\n",
                         "Pathway: ", TARGET_PATHWAY, "\n",
                         "IC50 Effect Size: ", round(SIGNED_IC50_EFFECT_SIZE, 2), "\n",
-                        "P-Value: ", round(TISSUE_PVAL, 4), "\n",
+                        "P-Value: ", round(FEATURE_PVAL, 4), "\n",
                         "Sample Size: ", N_FEATURE_POS
                       ))) +
         geom_point(alpha = 0.5) +

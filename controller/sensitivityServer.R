@@ -21,12 +21,12 @@ sensitivityServer <- function(id, dbcontext) {
     generate_volcano_plot <- function(data, title) {
       data <- data %>%
         mutate(SIGNED_IC50_EFFECT_SIZE = IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)),
-               highlight = TISSUE_PVAL == min(TISSUE_PVAL),
+               highlight = FEATURE_PVAL == min(FEATURE_PVAL),
                color_group = ifelse(SIGNED_IC50_EFFECT_SIZE < 0, "green", "red"))
       
       p <- ggplot(data, 
                   aes(x = SIGNED_IC50_EFFECT_SIZE, 
-                      y = -log10(TISSUE_PVAL + 2e-16),
+                      y = -log10(FEATURE_PVAL + 2e-16),
                       size = as.integer(N_FEATURE_POS) * 5,
                       color = color_group,
                       text = paste0(
@@ -34,7 +34,7 @@ sensitivityServer <- function(id, dbcontext) {
                         "Feature or Target: ", ifelse(grepl("PANCAN", FEATURE_NAME), DRUG_TARGET, FEATURE_NAME), "\n",
                         "Pathway: ", TARGET_PATHWAY, "\n",
                         "IC50 Effect Size: ", round(SIGNED_IC50_EFFECT_SIZE, 2), "\n",
-                        "P-Value: ", round(TISSUE_PVAL, 4), "\n",
+                        "P-Value: ", round(FEATURE_PVAL, 4), "\n",
                         "Sample Size: ", N_FEATURE_POS
                       ))) +
         geom_point(alpha = 0.5) +

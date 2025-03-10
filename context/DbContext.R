@@ -119,11 +119,14 @@ DbContext <- R6Class("DbContext",
                          self$connect_db()
                          ### querying the feature
                          query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL)")
-                         
+                         print(feature)
                          result <- dbGetQuery(self$conn, query)
                          data_filtered <- result %>%
                            filter((!grepl("PANCAN", FEATURE_NAME)) | (!is.na(DRUG_TARGET)))
                          
+                         # data_filtered$DRUG_TARGET <- strsplit(data_filtered$DRUG_TARGET, ",")
+                         # data_filtered$DRUG_TARGET <- lapply(data_filtered$DRUG_TARGET, trimws)
+                         # 
                          # Define a pattern that matches the feature as a whole word.
                          # (^|[^[:alnum:]]) ensures the feature is either at the beginning
                          # or preceded by a non-alphanumeric character,
@@ -136,9 +139,10 @@ DbContext <- R6Class("DbContext",
                          #   filter(grepl(pattern, FEATURE_NAME, perl = TRUE) | grepl(pattern, DRUG_TARGET, perl = TRUE))
                                                   
                          if(length(feature) > 0){
-                           pattern <- paste0("(^|[^[:alnum:]])", feature, "([^[:alnum:]]|$)")
-                           data_filtered <- data_filtered %>%
-                             filter(grepl(pattern, FEATURE_NAME, perl = TRUE))  
+                           # pattern <- paste0("(^|[^[:alnum:]])", feature, "([^[:alnum:]]|$)")
+                           # data_filtered <- data_filtered %>%
+                           #   filter(grepl(pattern, FEATURE_NAME, perl = TRUE))  
+                           data_filtered <- data_filtered %>% filter(FEATURE_NAME %in% feature)
                          } else if (length(target) > 0){
                            pattern <- paste0("(^|[^[:alnum:]])", target, "([^[:alnum:]]|$)")
                            print(pattern)
@@ -157,18 +161,20 @@ DbContext <- R6Class("DbContext",
                          # 
                          # result <- result %>% mutate(
                          #   SIGNED_EFFECT_SIZE = IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)))
-                         
+                         write.csv(data_filtered,"proto.csv")
                          ### querying the global resistance
                          query_resistance <- "SELECT DRUG_NAME, 
-                              MAX(IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / ABS(FEATURE_DELTA_MEAN_IC50))) AS GLOBAL_RESISTANCE 
+                              MAX(IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / ABS(FEATURE_DELTA_MEAN_IC50))) AS GLOBAL_RESISTANCE
                                FROM ANOVA_DATA 
                                GROUP BY DRUG_NAME"
                          resistance <- dbGetQuery(self$conn, query_resistance)
                          
                          # Merge the global resistance into the result data based on DRUG_NAME.
                          result <- merge(data_filtered, resistance, by = "DRUG_NAME", all.x = TRUE)
-                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(TISSUE_PVAL+1e-6))
+                         result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(FEATURE_PVAL+1e-6))
                          result <- result %>% arrange(desc(COMPOSITE_SCORE)) %>% head(15)
+                         result <- data_filtered %>% mutate(RANK_SCORE = SIGNED_EFFECT_SIZE * -log10(FEATURE_PVAL+1e-6))
+                         result <- result %>% arrange(RANK_SCORE) %>% head(15)
                          
                          
                          self$disconnect_db()
