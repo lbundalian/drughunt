@@ -15,10 +15,16 @@ library(plotly)
 library(gridlayout)
 
 # Source the module UI and server files
-source("view/sensitivityUI.R")
-source("controller/sensitivityServer.R")
-source("view/overviewUI.R")
-source("controller/overviewServer.R")
+source("view/drugsensitivityUI.R")
+source("controller/drugsensitivityServer.R")
+source("view/targetsensitivityUI.R")
+source("controller/targetsensitivityServer.R")
+source("view/featuresensitivityUI.R")
+source("controller/featuresensitivityServer.R")
+
+# source("view/overviewUI.R")
+# source("controller/overviewServer.R")
+
 source("view/matchingUI.R")
 source("controller/matchingServer.R")
 
@@ -39,8 +45,11 @@ ui <- fluidPage(
   
   div(class = "right-aligned-tabs",
       tabsetPanel(
-        tabPanel("Sensitivity", sensitivityUI("sensitivity")),
-        tabPanel("Overview", overviewUI("overview")),
+        # tabPanel("Sensitivity", sensitivityUI("sensitivity")),
+        # tabPanel("Overview", overviewUI("overview")),
+        tabPanel("Drug/Compound", drugsensitivityUI("drugsensitivity")),
+        tabPanel("Drug Target", targetsensitivityUI("targetsensitivity")),
+        tabPanel("Cancer Feature", featuresensitivityUI("featuresensitivity")),
         tabPanel("Matching", matchingUI("matching"))
       )
   )
@@ -51,8 +60,11 @@ server <- function(input, output, session) {
   dbcontext <- DbContext$new()
   
   # Call the modules’ server functions
-  sensitivityServer("sensitivity", dbcontext)
-  overviewServer("overview", dbcontext)
+  drugsensitivityServer("drugsensitivity", dbcontext)
+  targetsensitivityServer("targetsensitivity", dbcontext)
+  featuresensitivityServer("featuresensitivity", dbcontext)
+  # sensitivityServer("sensitivity", dbcontext)
+  # overviewServer("overview", dbcontext)
   matchingServer("matching",dbcontext)
 }
 
