@@ -65,9 +65,9 @@ targetsensitivityServer <- function(id, dbcontext) {
     
     # When the Plot button is clicked, generate the plot(s)
     observeEvent(input$plot_button, {
-      if (length(input$selected_drug) > 0) {
-        selected_items <- input$selected_drug
-        get_data_function <- dbcontext$get_drug_data
+      if (length(input$selected_target) > 0) {
+        selected_items <- input$selected_target
+        get_data_function <- dbcontext$get_target_data
         title_prefix <- "Volcano Plot for"
       }  else {
         selected_items <- NULL

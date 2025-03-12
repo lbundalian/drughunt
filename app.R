@@ -50,7 +50,7 @@ ui <- fluidPage(
         tabPanel("Drug/Compound", drugsensitivityUI("drugsensitivity")),
         tabPanel("Drug Target", targetsensitivityUI("targetsensitivity")),
         tabPanel("Cancer Feature", featuresensitivityUI("featuresensitivity")),
-        tabPanel("Matching", matchingUI("matching"))
+        tabPanel("Compound Ranking", matchingUI("matching"))
       )
   )
 ) 

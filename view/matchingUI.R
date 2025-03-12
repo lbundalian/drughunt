@@ -16,7 +16,7 @@ matchingUI <- function(id) {
     # Header
     grid_card_text(
       area = "header",
-      content = "Matching",
+      content = "Composite Compound Ranking",
       alignment = "start",
       is_title = TRUE
     ),
@@ -34,14 +34,14 @@ matchingUI <- function(id) {
         #   options = list(placeholder = "Search or select a target or feature"),
         #   width = "100%"
         # ),
-        selectizeInput(
-          inputId = ns("selected_target"),
-          label = "Select Target",
-          choices = NULL,
-          multiple = TRUE,
-          options = list(placeholder = "Search or select a target"),
-          width = "100%"
-        ),
+        # selectizeInput(
+        #   inputId = ns("selected_target"),
+        #   label = "Select Target",
+        #   choices = NULL,
+        #   multiple = TRUE,
+        #   options = list(placeholder = "Search or select a target"),
+        #   width = "100%"
+        # ),
         selectizeInput(
           inputId = ns("selected_feature"),
           label = "Select Cancer Feature",

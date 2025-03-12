@@ -10,7 +10,7 @@ matchingServer <- function(id, dbcontext) {
     observe({
       # combined_choices <- c(dbcontext$get_target_list(), dbcontext$get_feature_list())
       # updateSelectizeInput(session, "selected_target_feature", choices = combined_choices, server = TRUE)
-      updateSelectizeInput(session, "selected_target", choices = dbcontext$get_target_list()  , server = TRUE)
+      # updateSelectizeInput(session, "selected_target", choices = dbcontext$get_target_list()  , server = TRUE)
       updateSelectizeInput(session, "selected_feature", choices = dbcontext$get_feature_list(), server = TRUE)
     })
     
@@ -49,7 +49,9 @@ matchingServer <- function(id, dbcontext) {
       #   )
       # 
       # ggplotly(p)
-
+      ## flip the sign
+      data <- data %>% mutate(avg_scores = -1*avg_scores)
+      
       p <- ggplot(data, aes(
         x = reorder(DRUG_NAME,-avg_rank),  # Independent ordering
         y = avg_scores,
@@ -121,8 +123,8 @@ matchingServer <- function(id, dbcontext) {
       
       data <- inner_join(average_scores,average_rank,by='DRUG_NAME')
       
-      write.csv(data_ranked,"ranked_data.csv")
-      write.csv(average_rank,"average_rank.csv")
+      # write.csv(data_ranked,"ranked_data.csv")
+      # write.csv(average_rank,"average_rank.csv")
       
       output$flip_chart <- renderPlotly({
         generate_flip_chart(data, paste("Composite Score Chart for", paste(selected_items, collapse = ", ")))

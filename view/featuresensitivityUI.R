@@ -19,7 +19,7 @@ featuresensitivityUI <- function(id) {
     # Header
     grid_card_text(
       area = "header",
-      content = "Sensitivity",
+      content = "Drug Sensitivity per Cancer Feature",
       alignment = "start",
       is_title = TRUE
     ),
