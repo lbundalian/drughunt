@@ -25,8 +25,8 @@ source("controller/featuresensitivityServer.R")
 # source("view/overviewUI.R")
 # source("controller/overviewServer.R")
 
-source("view/matchingUI.R")
-source("controller/matchingServer.R")
+source("view/profilingUI.R")
+source("controller/profilingServer.R")
 
 ui <- fluidPage(
   titlePanel("Pancancer Drug Sensitivity Dashboard"),
@@ -50,7 +50,7 @@ ui <- fluidPage(
         tabPanel("Drug/Compound", drugsensitivityUI("drugsensitivity")),
         tabPanel("Drug Target", targetsensitivityUI("targetsensitivity")),
         tabPanel("Cancer Feature", featuresensitivityUI("featuresensitivity")),
-        tabPanel("Compound Ranking", matchingUI("matching"))
+        tabPanel("Compound Ranking", profilingUI("profiling"))
       )
   )
 ) 
@@ -65,7 +65,7 @@ server <- function(input, output, session) {
   featuresensitivityServer("featuresensitivity", dbcontext)
   # sensitivityServer("sensitivity", dbcontext)
   # overviewServer("overview", dbcontext)
-  matchingServer("matching",dbcontext)
+  profilingServer("profiling",dbcontext)
 }
 
 shinyApp(ui, server)

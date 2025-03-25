@@ -114,6 +114,59 @@ DbContext <- R6Class("DbContext",
                          self$disconnect_db()
                          return(result)
                        },
+                       find_mutation = function(drugs= NULL, penalty = 1) {
+                         self$connect_db()
+                         query <- sprintf("SELECT * FROM ANOVA_DATA WHERE (\"FEATURE_NAME\" NOT LIKE '%%PANCAN%%' OR \"DRUG_TARGET\" IS NOT NULL)")
+                         
+                         query <- "SELECT *,
+                                    CASE
+                                      WHEN FEATURE_NAME NOT LIKE '%PANCAN%' THEN FEATURE_NAME
+                                      WHEN DRUG_TARGET IS NOT NULL THEN DRUG_TARGET
+                                      
+                                      ELSE NULL
+                                    END AS CANCER_FEATURE
+                                    FROM ANOVA_DATA
+                                    WHERE (FEATURE_NAME NOT LIKE '%PANCAN%' OR DRUG_TARGET IS NOT NULL)"
+                         result <- dbGetQuery(self$conn, query)
+                         data_filtered <- result %>%
+                           filter((!grepl("PANCAN", FEATURE_NAME)) | (!is.na(DRUG_TARGET)))
+                         
+                         
+                         if(length(drugs) > 0){
+                           data_filtered <- data_filtered %>% filter(DRUG_NAME %in% drugs)
+                         } 
+                         
+                         
+                         data_filtered <- data_filtered %>%
+                           mutate(SIGNED_EFFECT_SIZE = ifelse(FEATURE_DELTA_MEAN_IC50 != 0,
+                                                              IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)),
+                                                              0))                         
+                         
+                         result <- data_filtered %>% mutate(RANK_SCORE = SIGNED_EFFECT_SIZE * -log10(FEATURE_PVAL+1e-6))
+                         # 
+                         
+                         result <- data_filtered %>% 
+                           # Create the computed score
+                           mutate(RANK_SCORE = SIGNED_EFFECT_SIZE * -log10(FEATURE_PVAL + 1e-6)) %>% 
+                           # Group by CANCER_FEATURE and average numeric values over duplicates
+                           group_by(CANCER_FEATURE) %>%
+                           summarise(
+                             SIGNED_EFFECT_SIZE = mean(SIGNED_EFFECT_SIZE, na.rm = TRUE),
+                             FEATURE_PVAL = mean(FEATURE_PVAL, na.rm = TRUE),
+                             RANK_SCORE = mean(RANK_SCORE, na.rm = TRUE),
+                             # If you have additional columns (for example mutation_profile), decide how to summarize them.
+                             CANCER_FEATURE = first(CANCER_FEATURE)
+                           ) %>%
+                           ungroup() %>%
+                           # Compute the rank (using average method for ties)
+                           mutate(rank = rank(RANK_SCORE, ties.method = "average"))
+                         
+                         result <- result %>% arrange(RANK_SCORE) %>% head(15)
+                         
+                         self$disconnect_db()
+                         return(result)
+                         
+                       },
                        
                        find_best_drug = function(feature= NULL, target=NULL,penalty = 1) {
                          self$connect_db()
@@ -161,7 +214,7 @@ DbContext <- R6Class("DbContext",
                          # 
                          # result <- result %>% mutate(
                          #   SIGNED_EFFECT_SIZE = IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / abs(FEATURE_DELTA_MEAN_IC50)))
-                         write.csv(data_filtered,"proto.csv")
+                         # write.csv(data_filtered,"proto.csv")
                          ### querying the global resistance
                          query_resistance <- "SELECT DRUG_NAME, 
                               MAX(IC50_EFFECT_SIZE * (FEATURE_DELTA_MEAN_IC50 / ABS(FEATURE_DELTA_MEAN_IC50))) AS GLOBAL_RESISTANCE
