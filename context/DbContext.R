@@ -227,7 +227,8 @@ DbContext <- R6Class("DbContext",
                          result <- result %>% mutate(COMPOSITE_SCORE = ((-SIGNED_EFFECT_SIZE) - penalty * GLOBAL_RESISTANCE) * -log10(FEATURE_PVAL+1e-6))
                          result <- result %>% arrange(desc(COMPOSITE_SCORE)) %>% head(15)
                          result <- data_filtered %>% mutate(RANK_SCORE = SIGNED_EFFECT_SIZE * -log10(FEATURE_PVAL+1e-6))
-                         result <- result %>% arrange(RANK_SCORE) %>% head(15)
+                         result <- result %>% arrange(RANK_SCORE) 
+                         # %>% head(15)
                          
                          
                          self$disconnect_db()

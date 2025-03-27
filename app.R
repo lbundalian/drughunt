@@ -25,6 +25,8 @@ source("controller/featuresensitivityServer.R")
 # source("view/overviewUI.R")
 # source("controller/overviewServer.R")
 
+source("view/matchingUI.R")
+source("controller/matchingServer.R")
 source("view/profilingUI.R")
 source("controller/profilingServer.R")
 
@@ -50,7 +52,8 @@ ui <- fluidPage(
         tabPanel("Drug/Compound", drugsensitivityUI("drugsensitivity")),
         tabPanel("Drug Target", targetsensitivityUI("targetsensitivity")),
         tabPanel("Cancer Feature", featuresensitivityUI("featuresensitivity")),
-        tabPanel("Compound Ranking", profilingUI("profiling"))
+        tabPanel("Compound Matching", matchingUI("matching")),
+        tabPanel("Mutation Profiling", profilingUI("profiling"))
       )
   )
 ) 
@@ -64,7 +67,7 @@ server <- function(input, output, session) {
   targetsensitivityServer("targetsensitivity", dbcontext)
   featuresensitivityServer("featuresensitivity", dbcontext)
   # sensitivityServer("sensitivity", dbcontext)
-  # overviewServer("overview", dbcontext)
+  matchingServer("matching", dbcontext)
   profilingServer("profiling",dbcontext)
 }
 
